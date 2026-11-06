@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MateAventuras - Aprende Matemáticas Jugando</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Fredoka / Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFD166',
+                        brandGreen: '#06D6A0',
+                        brandBlue: '#118AB2',
+                        brandRed: '#EF476F',
+                        brandPurple: '#8338EC',
+                        brandDark: '#073B4C'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+        .bouncy {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .pulse-subtle {
+            animation: pulseSubtle 2.5s infinite;
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-amber-200">
+
+    <!-- BARRA NAVEGACIÓN PRINCIPAL -->
+    <header id="mainNav" class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-40 border-b-4 border-amber-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showScreen('dashboard')">
+                <div class="w-12 h-12 bg-amber-400 rounded-2xl flex items-center justify-center shadow-md transform rotate-3 hover:rotate-0 transition-transform">
+                    <i class="fa-solid fa-shapes text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-wide leading-none font-fredoka">Mate<span class="text-amber-500">Aventuras</span></h1>
+                    <span class="text-xs text-slate-500 font-semibold tracking-wider uppercase">3º a 6º de Primaria</span>
+                </div>
+            </div>
+
+            <!-- Profile Info & Controls -->
+            <div id="navUserArea" class="hidden flex items-center space-x-3 sm:space-x-4">
+                <!-- Select de Grado escolar -->
+                <div class="hidden sm:flex items-center bg-amber-50 border-2 border-amber-300 rounded-xl px-3 py-1">
+                    <i class="fa-solid fa-graduation-cap text-amber-600 mr-2"></i>
+                    <select id="gradeSelector" onchange="app.changeGrade(this.value)" class="bg-transparent text-slate-700 font-bold text-sm focus:outline-none cursor-pointer">
+                        <option value="3">3º de Primaria</option>
+                        <option value="4">4º de Primaria</option>
+                        <option value="5">5º de Primaria</option>
+                        <option value="6">6º de Primaria</option>
+                    </select>
+                </div>
+
+                <!-- Puntos acumulados -->
+                <div class="flex items-center bg-amber-400 text-white font-bold px-3 py-1.5 rounded-full shadow-sm">
+                    <i class="fa-solid fa-star text-yellow-100 mr-1.5 text-lg"></i>
+                    <span id="userPoints">0</span>
+                </div>
+
+                <!-- Botón Sonido -->
+                <button onclick="audio.toggleSound()" id="soundBtn" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition" title="Activar/Desactivar Sonido">
+                    <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+                </button>
+
+                <!-- Botón Tutor Búho y Glosario -->
+                <button onclick="app.openTutorModal()" class="w-10 h-10 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold flex items-center justify-center transition border border-amber-300" title="Glosario y Tutoría del Profe Búho">
+                    <i class="fa-solid fa-book-openReader"></i>
+                </button>
+
+                <!-- Avatar Usuario -->
+                <div onclick="app.openProfileModal()" class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full cursor-pointer transition border border-slate-300">
+                    <span id="navAvatar" class="text-xl">🦊</span>
+                    <span id="navUserName" class="font-bold text-sm text-slate-700 max-w-[80px] sm:max-w-[120px] truncate">Usuario</span>
+                    <i class="fa-solid fa-arrows-rotate text-xs text-slate-400"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- 1. PANTALLA SELECCIÓN/CREACIÓN PERFIL (INICIAL) -->
+        <section id="screenProfiles" class="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8 border-4 border-amber-300 my-8 text-center">
+            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-amber-400">
+                <i class="fa-solid fa-icons text-amber-500 text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 font-fredoka mb-2">¡Bienvenido a MateAventuras!</h2>
+            <p class="text-slate-600 text-sm mb-6">Elige tu personaje o crea un perfil para guardar tus medallas y avances.</p>
+
+            <!-- Lista de Perfiles Guardados -->
+            <div id="profilesList" class="space-y-3 mb-6">
+                <!-- Se poblará dinámicamente -->
+            </div>
+
+            <button onclick="app.showCreateUserForm()" class="w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-3 px-4 rounded-2xl shadow-lg transform hover:-translate-y-0.5 transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Crear Nuevo Perfil</span>
+            </button>
+        </section>
+
+        <!-- FORMULARIO CREAR PERFIL (MODAL/HIDDEN) -->
+        <div id="modalCreateUser" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border-4 border-amber-400">
+                <h3 class="text-xl font-bold text-slate-800 text-center mb-4 font-fredoka">Crea tu personaje</h3>
+                
+                <div class="mb-4">
+                    <label class="block text-slate-700 font-bold text-sm mb-2 text-left">Tu nombre o apodo:</label>
+                    <input type="text" id="newUserName" maxlength="15" placeholder="Ej. Sofia" class="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-amber-400 focus:outline-none text-lg font-bold text-slate-800">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-slate-700 font-bold text-sm mb-2 text-left">Grado Escolar:</label>
+                    <select id="newUserGrade" class="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-amber-400 focus:outline-none font-bold text-slate-700">
+                        <option value="3">3º de Primaria</option>
+                        <option value="4">4º de Primaria</option>
+                        <option value="5">5º de Primaria</option>
+                        <option value="6">6º de Primaria</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-slate-700 font-bold text-sm mb-2 text-left">Elige tu Avatar:</label>
+                    <div id="avatarPicker" class="grid grid-cols-4 gap-3 text-3xl text-center">
+                        <button type="button" onclick="app.selectAvatar('🦊')" class="avatar-opt p-3 border-2 border-amber-400 bg-amber-50 rounded-2xl hover:scale-110 transition">🦊</button>
+                        <button type="button" onclick="app.selectAvatar('🦉')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🦉</button>
+                        <button type="button" onclick="app.selectAvatar('🤖')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🤖</button>
+                        <button type="button" onclick="app.selectAvatar('🦁')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🦁</button>
+                        <button type="button" onclick="app.selectAvatar('🦄')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🦄</button>
+                        <button type="button" onclick="app.selectAvatar('🚀')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🚀</button>
+                        <button type="button" onclick="app.selectAvatar('🐱')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🐱</button>
+                        <button type="button" onclick="app.selectAvatar('🐼')" class="avatar-opt p-3 border-2 border-slate-200 rounded-2xl hover:scale-110 transition">🐼</button>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button onclick="app.closeCreateUserModal()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition">Cancelar</button>
+                    <button onclick="app.saveNewUser()" class="w-1/2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg transition">¡Guardar!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DASHBOARD / MENU PRINCIPAL -->
+        <section id="screenDashboard" class="hidden space-y-6">
+            
+            <!-- Mascota & Saludo Banner -->
+            <div class="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+                <div class="z-10 max-w-xl text-center md:text-left mb-4 md:mb-0">
+                    <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+                        ¡Hola <span id="dashUserName">Aventurero</span>! • <span id="dashGradeText">3º Primaria</span>
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold font-fredoka leading-tight mb-2">¡Listo para entrenar tu cerebro hoy!</h2>
+                    <p class="text-amber-100 text-sm sm:text-base" id="mascotMessage">"Las matemáticas son como superpoderes: ¡mientras más practicas, más fuerte te haces!"</p>
+                </div>
+                <div class="z-10 flex items-center space-x-3 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+                    <div class="text-5xl bouncy" id="mascotAvatar">🦉</div>
+                    <div>
+                        <div class="text-xs uppercase font-bold text-amber-200">Guía MateAventuras</div>
+                        <div class="font-bold text-lg">Profe Búho</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accesos Rápidos & Medallas Resumen -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div onclick="app.showScreen('trophies')" class="bg-white p-4 rounded-2xl shadow-md border-2 border-amber-200 flex items-center space-x-3 cursor-pointer hover:border-amber-400 transition">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase">Medallas</div>
+                        <div class="text-lg font-bold text-slate-800" id="dashMedalCount">0 / 8</div>
+                    </div>
+                </div>
+                <div onclick="app.showScreen('stats')" class="bg-white p-4 rounded-2xl shadow-md border-2 border-emerald-200 flex items-center space-x-3 cursor-pointer hover:border-emerald-400 transition">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase">Precisión</div>
+                        <div class="text-lg font-bold text-slate-800" id="dashAccuracy">0%</div>
+                    </div>
+                </div>
+                <div onclick="app.showScreen('stats')" class="bg-white p-4 rounded-2xl shadow-md border-2 border-blue-200 flex items-center space-x-3 cursor-pointer hover:border-blue-400 transition">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase">Resueltos</div>
+                        <div class="text-lg font-bold text-slate-800" id="dashTotalSolved">0</div>
+                    </div>
+                </div>
+                <div onclick="app.openTutorModal()" class="bg-white p-4 rounded-2xl shadow-md border-2 border-purple-200 flex items-center space-x-3 cursor-pointer hover:border-purple-400 transition">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase">Profe Búho</div>
+                        <div class="text-sm font-bold text-purple-600">Glosario & Ayuda</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETAS DE SELECCIÓN DE MÓDULOS EDUCATIVOS -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-extrabold text-slate-800 font-fredoka flex items-center">
+                    <i class="fa-solid fa-compass text-amber-500 mr-2"></i> Selecciona un Módulo de Aprendizaje
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Tarjeta Módulo 1 -->
+                    <div onclick="app.startModule(1)" class="bg-white rounded-3xl p-6 shadow-md border-4 border-emerald-300 hover:border-emerald-500 cursor-pointer transition transform hover:-translate-y-1 relative overflow-hidden group">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-xs font-extrabold uppercase text-emerald-600 tracking-wider">Módulo 1</span>
+                                <h4 class="text-xl font-bold text-slate-800 font-fredoka">Operaciones Básicas</h4>
+                                <p class="text-xs text-slate-500 mt-1">Sumas, restas, multiplicación y división. Elige de 1 a 6 cifras y usa la pizarra.</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Módulo 2 -->
+                    <div onclick="app.startModule(2)" class="bg-white rounded-3xl p-6 shadow-md border-4 border-blue-300 hover:border-blue-500 cursor-pointer transition transform hover:-translate-y-1 relative overflow-hidden group">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-cubes"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-xs font-extrabold uppercase text-blue-600 tracking-wider">Módulo 2</span>
+                                <h4 class="text-xl font-bold text-slate-800 font-fredoka">Valor Posicional vs. Absoluto</h4>
+                                <p class="text-xs text-slate-500 mt-1">Descubre cuánto vale cada dígito según su lugar: Unidades, Decenas, Centenas y Millar.</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Módulo 3 -->
+                    <div onclick="app.startModule(3)" class="bg-white rounded-3xl p-6 shadow-md border-4 border-purple-300 hover:border-purple-500 cursor-pointer transition transform hover:-translate-y-1 relative overflow-hidden group">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-pie-chart"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-xs font-extrabold uppercase text-purple-600 tracking-wider">Módulo 3</span>
+                                <h4 class="text-xl font-bold text-slate-800 font-fredoka">Fracciones y Bloques</h4>
+                                <p class="text-xs text-slate-500 mt-1">Laboratorio de fracciones (denominadores hasta 64+), pizzería e instructores visuales.</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Módulo 4 -->
+                    <div onclick="app.startModule(4)" class="bg-white rounded-3xl p-6 shadow-md border-4 border-rose-300 hover:border-rose-500 cursor-pointer transition transform hover:-translate-y-1 relative overflow-hidden group">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-lightbulb"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-xs font-extrabold uppercase text-rose-600 tracking-wider">Módulo 4</span>
+                                <h4 class="text-xl font-bold text-slate-800 font-fredoka">Razonamiento Lógico</h4>
+                                <p class="text-xs text-slate-500 mt-1">Problemas de la vida real por grado. Extrae datos, calcula en la pizarra y explica la solución.</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-500 group-hover:translate-x-1 transition"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. MÓDULO 1: OPERACIONES BÁSICAS CON ADAPTABILIDAD DE CIFRAS Y PIZARRA -->
+        <section id="screenModule1" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-emerald-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Módulo 1: Operaciones Básicas</h3>
+                    <span class="text-xs text-emerald-600 font-semibold">Configura el número de cifras y resuelve</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="m1Streak" class="bg-amber-100 text-amber-800 font-extrabold text-xs px-3 py-1.5 rounded-full border border-amber-300">0 🔥</span>
+                </div>
+            </div>
+
+            <!-- Selector de Operación -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <button id="m1BtnAdd" onclick="m1.setOperation('add')" class="op-tab-btn active bg-emerald-500 text-white font-extrabold py-3 rounded-2xl shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus"></i> <span>Suma</span>
+                </button>
+                <button id="m1BtnSub" onclick="m1.setOperation('sub')" class="op-tab-btn bg-white hover:bg-emerald-50 text-slate-700 font-extrabold py-3 rounded-2xl shadow transition flex items-center justify-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-minus"></i> <span>Resta</span>
+                </button>
+                <button id="m1BtnMul" onclick="m1.setOperation('mul')" class="op-tab-btn bg-white hover:bg-emerald-50 text-slate-700 font-extrabold py-3 rounded-2xl shadow transition flex items-center justify-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-xmark"></i> <span>Multiplicación</span>
+                </button>
+                <button id="m1BtnDiv" onclick="m1.setOperation('div')" class="op-tab-btn bg-white hover:bg-emerald-50 text-slate-700 font-extrabold py-3 rounded-2xl shadow transition flex items-center justify-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-divide"></i> <span>División</span>
+                </button>
+            </div>
+
+            <!-- Selector de Cifras y Explorador de Tablas -->
+            <div class="bg-white p-4 rounded-2xl shadow border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3 text-xs font-bold text-slate-700">
+                    <span>Cifras primer número:</span>
+                    <select id="m1Digits1" onchange="m1.generateQuestion()" class="bg-emerald-50 border-2 border-emerald-300 rounded-xl px-2 py-1 font-extrabold text-emerald-800">
+                        <option value="1">1 Cifra</option>
+                        <option value="2">2 Cifras</option>
+                        <option value="3" selected>3 Cifras</option>
+                        <option value="4">4 Cifras</option>
+                        <option value="5">5 Cifras</option>
+                        <option value="6">6 Cifras</option>
+                    </select>
+                    <span>Cifras segundo número:</span>
+                    <select id="m1Digits2" onchange="m1.generateQuestion()" class="bg-emerald-50 border-2 border-emerald-300 rounded-xl px-2 py-1 font-extrabold text-emerald-800">
+                        <option value="1">1 Cifra</option>
+                        <option value="2">2 Cifras</option>
+                        <option value="3" selected>3 Cifras</option>
+                        <option value="4">4 Cifras</option>
+                        <option value="5">5 Cifras</option>
+                        <option value="6">6 Cifras</option>
+                    </select>
+                </div>
+                <button onclick="m1.showTableExplorer()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold px-3 py-1.5 rounded-xl text-xs transition shadow flex items-center">
+                    <i class="fa-solid fa-table-cells mr-1.5"></i> Explorador de Tablas
+                </button>
+            </div>
+
+            <!-- TABLAS DE MULTIPLICAR MODAL/EXPLORER -->
+            <div id="m1TableExplorer" class="hidden bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-extrabold text-amber-900 text-sm">💡 Explorador Visual de Tablas de Multiplicar</h4>
+                    <button onclick="m1.closeTableExplorer()" class="text-amber-700 hover:text-amber-900 text-xs font-bold">Cerrar</button>
+                </div>
+                <div id="tableSelectorBtns" class="flex flex-wrap gap-1.5"></div>
+                <div id="tableGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2"></div>
+            </div>
+
+            <!-- ÁREA DEL EJERCICIO -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-400 max-w-2xl mx-auto space-y-6 text-center">
+                <div class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Resuelve el siguiente ejercicio:</div>
+                <div id="m1QuestionText" class="text-3xl sm:text-5xl font-black text-slate-800 font-fredoka py-2">
+                    0 + 0 = ?
+                </div>
+
+                <!-- Botón Abrir Pizarra -->
+                <button onclick="m1.toggleScratchpad()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+                    <span id="m1ScratchBtnText">Abrir Pizarra para hacer cuentas paso a paso</span>
+                </button>
+
+                <!-- PIZARRA OCULTABLE -->
+                <div id="m1ScratchpadBox" class="hidden border-2 border-emerald-300 bg-slate-900 rounded-2xl p-4 space-y-2 text-left">
+                    <div class="flex justify-between items-center text-xs text-emerald-400 font-bold">
+                        <span>✏️ Pizarra Digital Módulo 1 (Dibuja tus operaciones y llevadas aquí)</span>
+                        <button onclick="m1.clearCanvas()" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-eraser mr-1"></i> Limpiar</button>
+                    </div>
+                    <canvas id="scratchCanvas" width="550" height="150" class="w-full bg-slate-950 rounded-xl cursor-crosshair border border-slate-800 touch-none"></canvas>
+                </div>
+
+                <!-- OPCIONES DE RESPUESTA -->
+                <div id="m1OptionsContainer" class="grid grid-cols-2 gap-4 pt-2">
+                    <!-- Dinámico -->
+                </div>
+
+                <div id="m1Feedback" class="hidden p-4 rounded-2xl font-bold text-center text-sm"></div>
+            </div>
+        </section>
+
+        <!-- 4. MÓDULO 2: VALOR POSICIONAL VS ABSOLUTO -->
+        <section id="screenModule2" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-blue-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Módulo 2: Valor Posicional vs. Absoluto</h3>
+                    <span class="text-xs text-blue-600 font-semibold">Identifica el valor según la posición de la cifra</span>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <!-- VISUALIZADOR DE UNIDADES Y POSICIONES -->
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-400 space-y-6 max-w-4xl mx-auto">
+                <div class="text-center space-y-1">
+                    <span class="text-xs font-extrabold uppercase text-blue-600 tracking-wider">Desglose Posicional del Número:</span>
+                    <h4 class="text-sm text-slate-600">Observa cómo cada casilla cambia el valor real del dígito:</h4>
+                </div>
+
+                <!-- Tarjetas de Desglose DM, UM, C, D, U -->
+                <div id="m2PositionalDisplay" class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+                    <!-- Dinámico -->
+                </div>
+
+                <!-- PREGUNTA DE VALOR POSICIONAL VS ABSOLUTO -->
+                <div class="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-200 text-center space-y-4">
+                    <div id="m2QuestionText" class="text-lg sm:text-xl font-bold text-slate-800">
+                        Cargando ejercicio...
+                    </div>
+
+                    <div id="m2OptionsContainer" class="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+                        <!-- Dinámico -->
+                    </div>
+
+                    <div id="m2Feedback" class="hidden p-4 rounded-2xl font-bold text-center text-sm"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. MÓDULO 3: FRACCIONES, PIZZA Y BLOQUES AVANZADOS -->
+        <section id="screenModule3" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-purple-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Módulo 3: Fracciones y Laboratorio Visual</h3>
+                    <span class="text-xs text-purple-600 font-semibold">Corta pizzas, suma/resta fracciones y trabaja con denominadores grandes</span>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <!-- Selector de Submodo Fracciones -->
+            <div class="flex flex-wrap justify-center gap-2">
+                <button onclick="m3.setSubmode('builder')" id="m3SubBtnBuilder" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition">
+                    <i class="fa-solid fa-cubes mr-1"></i> Bloques & Denominadores (hasta 32+)
+                </button>
+                <button onclick="m3.setSubmode('pizza')" id="m3SubBtnPizza" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition border border-slate-300">
+                    <i class="fa-solid fa-pizza-slice mr-1"></i> Repartición de Pizza
+                </button>
+                <button onclick="m3.setSubmode('operations')" id="m3SubBtnOps" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition border border-slate-300">
+                    <i class="fa-solid fa-calculator mr-1"></i> Operaciones de Fracciones
+                </button>
+            </div>
+
+            <!-- SUBMODO A: BLOQUES CON DENOMINADOR AMPLIO Y RETOS DE ESCRITURA -->
+            <div id="m3PanelBuilder" class="bg-white rounded-3xl p-6 shadow-xl border-4 border-purple-400 space-y-6">
+                <div class="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200 text-center space-y-3">
+                    <span class="text-xs font-extrabold uppercase text-purple-700 tracking-wider">📐 Selector Dinámico de Denominador:</span>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase">Partes en que se divide (Denominador):</label>
+                            <input type="number" id="m3DenInput" min="2" max="64" value="16" onchange="m3.updateDenominators(this.value)" class="w-20 px-3 py-1.5 border-2 border-purple-400 rounded-xl font-bold text-center text-purple-900">
+                        </div>
+                        <button onclick="m3.generateNewChallenge()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
+                            <i class="fa-solid fa-dice mr-1"></i> Generar Nuevo Reto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DESAFÍO Y BANDEJA -->
+                <div class="space-y-4">
+                    <h4 class="text-xl font-extrabold text-slate-800 text-center">Arma la fracción: <span class="text-purple-600 font-fredoka text-2xl" id="m3TargetFractionText">5 / 16</span></h4>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 text-center">Toca los bloques para agregarlos a tu bandeja:</label>
+                        <div id="m3BlockPalette" class="flex flex-wrap gap-2 justify-center bg-slate-50 p-3 rounded-2xl border-2 border-slate-200 max-h-40 overflow-y-auto">
+                            <!-- Bloques dinámicos basados en denominador -->
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span>📥 Bandeja de Construcción:</span>
+                            <button onclick="m3.clearTray()" class="text-rose-500 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200 transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Vaciar
+                            </button>
+                        </div>
+                        <div id="m3TrayContainer" class="min-h-[80px] bg-purple-950/5 border-4 border-dashed border-purple-300 rounded-2xl p-3 flex flex-wrap items-center gap-2"></div>
+                        <div class="flex justify-between items-center text-xs font-semibold px-2 text-slate-500">
+                            <span>Suma acumulada: <b id="m3TraySumText" class="text-purple-700 font-bold text-sm">0</b></span>
+                            <span id="m3TrayBlocksCount">0 bloques</span>
+                        </div>
+                    </div>
+
+                    <!-- VALIDACIÓN ESCRITA -->
+                    <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 space-y-2">
+                        <label class="block text-xs font-extrabold text-amber-900 uppercase">✍️ Escribe cómo se lee la fracción en letra (Ej. "cinco dieciseisavos", "un medio"):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="m3TextInput" placeholder="Escribe en letra..." class="w-full px-4 py-3 rounded-xl border-2 border-amber-300 focus:border-amber-500 focus:outline-none font-bold text-slate-800 text-lg">
+                            <button onclick="m3.verifyFractionChallenge()" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition whitespace-nowrap">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> Validar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="m3Feedback" class="hidden p-3 rounded-xl font-bold text-center text-sm"></div>
+                </div>
+            </div>
+
+            <!-- SUBMODO B: JUEGO INTERACTIVO DE PIZZA Y EQUIVALENCIAS -->
+            <div id="m3PanelPizza" class="hidden bg-white rounded-3xl p-6 shadow-xl border-4 border-amber-400 space-y-6">
+                <div class="text-center space-y-2">
+                    <h4 class="text-2xl font-bold font-fredoka text-slate-800">🍕 Pizzería Interactiva: Repartir y Comer Slices</h4>
+                    <p class="text-xs text-slate-600">Toca las rebanadas para comértelas o agregarlas. Observa cómo equivalen a enteros y fracciones.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- Pizza SVG Interactiva -->
+                    <div class="flex flex-col items-center space-y-3">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-xs font-bold text-slate-700">Rebanadas Totales:</label>
+                            <select id="m3PizzaSlicesSelect" onchange="m3.initPizza(this.value)" class="bg-amber-100 border-2 border-amber-400 font-bold px-3 py-1 rounded-xl text-sm">
+                                <option value="2">2 rebanadas (Medios)</option>
+                                <option value="4" selected>4 rebanadas (Cuartos)</option>
+                                <option value="6">6 rebanadas (Sextos)</option>
+                                <option value="8">8 rebanadas (Octavos)</option>
+                                <option value="12">12 rebanadas (Doceavos)</option>
+                                <option value="16">16 rebanadas (Dieciseisavos)</option>
+                            </select>
+                        </div>
+
+                        <!-- Canvas Pizza Container -->
+                        <div id="pizzaSvgContainer" class="w-64 h-64 relative cursor-pointer transform hover:scale-105 transition">
+                            <!-- SVG Pizza generado dinámicamente -->
+                        </div>
+                        <span class="text-xs font-bold text-amber-700">¡Toca las rebanadas para comerlas/recuperarlas!</span>
+                    </div>
+
+                    <!-- Estado y Demostración de Equivalencias -->
+                    <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-300 space-y-4">
+                        <div class="text-center space-y-1">
+                            <div class="text-xs uppercase font-bold text-slate-500">Fracción Resultante de la Pizza:</div>
+                            <div id="pizzaFractionText" class="text-3xl font-black text-amber-800 font-fredoka">4 / 4</div>
+                            <div id="pizzaWordsText" class="text-lg font-bold text-slate-700">Cuatro cuartos = 1 entero completo 🍕</div>
+                        </div>
+
+                        <div class="border-t border-amber-200 pt-3 space-y-2 text-xs font-semibold text-slate-700">
+                            <div class="font-bold text-amber-900 uppercase">💡 Lecciones de Equivalencia:</div>
+                            <ul class="list-disc list-inside space-y-1 text-slate-600">
+                                <li>2/2 = 4/4 = 8/8 = 16/16 = <b>1 Entero</b></li>
+                                <li>2/4 es equivalente a <b>1/2 (Un medio)</b></li>
+                                <li>4/8 es equivalente a <b>1/2 (Un medio)</b></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBMODO C: OPERACIONES ENTRE FRACCIONES -->
+            <div id="m3PanelOps" class="hidden bg-white rounded-3xl p-6 shadow-xl border-4 border-indigo-400 space-y-6">
+                <div class="text-center space-y-1">
+                    <h4 class="text-xl font-bold font-fredoka text-slate-800">🧮 Practicador de Sumas, Restas y Multiplicación de Fracciones</h4>
+                    <p class="text-xs text-slate-600">Resuelve operaciones fraccionarias con ayuda visual paso a paso.</p>
+                </div>
+
+                <div class="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-200 text-center space-y-4 max-w-xl mx-auto">
+                    <div id="m3OpQuestion" class="text-2xl sm:text-3xl font-black text-indigo-900 font-fredoka flex items-center justify-center space-x-3">
+                        <span>1/4</span> <span>+</span> <span>2/4</span> <span>=</span> <span>?</span>
+                    </div>
+
+                    <div id="m3OpOptions" class="grid grid-cols-2 gap-3">
+                        <!-- Opciones dinámicas -->
+                    </div>
+
+                    <div id="m3OpFeedback" class="hidden p-3 rounded-xl font-bold text-center text-sm"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. MÓDULO 4: METODOLOGÍA DE RAZONAMIENTO CON INTERACCIÓN Y PIZARRA INTEGRADAS -->
+        <section id="screenModule4" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-rose-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Módulo 4: Razonamiento y Análisis Interactivo</h3>
+                    <span class="text-xs text-rose-600 font-semibold">Extrae datos, dibuja cuentas en pantalla y explica tu razonamiento</span>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-rose-400 max-w-3xl mx-auto space-y-6">
+                
+                <!-- Enunciado del Problema Real -->
+                <div class="p-5 bg-rose-50 rounded-2xl border-2 border-rose-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-rose-700 uppercase tracking-wider">Situtación de la vida real:</span>
+                        <span id="m4GradeLabel" class="text-xs bg-rose-200 text-rose-900 font-bold px-2 py-0.5 rounded-md">3º Primaria</span>
+                    </div>
+                    <p id="m4ProblemStatement" class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed">
+                        Cargando problema...
+                    </p>
+                </div>
+
+                <!-- EXTRAER DATOS INTERACTIVOS (FICHAS) -->
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 space-y-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase">📌 Toca o selecciona las fichas con los datos del problema que vas a usar:</label>
+                    <div id="m4InteractiveTags" class="flex flex-wrap gap-2">
+                        <!-- Fichas de datos seleccionables -->
+                    </div>
+                </div>
+
+                <!-- PIZARRA DE DIBUJO Y CÁLCULOS DENTRO DEL MÓDULO 4 -->
+                <div class="border-2 border-emerald-300 bg-slate-900 rounded-2xl p-4 space-y-2">
+                    <div class="flex justify-between items-center text-xs text-emerald-400 font-bold">
+                        <span>✏️ Pizarra Digital Módulo 4: Haz tus operaciones aquí con el dedo o mouse</span>
+                        <button onclick="m4.clearCanvas()" class="text-rose-400 hover:text-rose-300 font-bold"><i class="fa-solid fa-eraser mr-1"></i> Limpiar Pizarra</button>
+                    </div>
+                    <canvas id="m4ScratchCanvas" width="600" height="160" class="w-full bg-slate-950 rounded-xl cursor-crosshair border border-slate-800 touch-none"></canvas>
+                </div>
+
+                <!-- PASOS DE RESPUESTA -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">🔢 Resultado Numérico de la Operación:</label>
+                            <input type="text" id="m4Step3Input" placeholder="Ej: 5 o $5" class="w-full px-3 py-2 rounded-xl border-2 border-rose-300 focus:border-rose-500 focus:outline-none text-base font-extrabold text-rose-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">🔍 ¿Qué te pedía encontrar el problema?</label>
+                            <input type="text" id="m4Step2Input" placeholder="Ej: El dinero de cambio" class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 focus:border-rose-400 focus:outline-none text-sm font-semibold">
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 space-y-2">
+                        <label class="block text-xs font-bold text-amber-900 uppercase">💬 Explica con tus palabras por qué llegaste a ese resultado y qué significa:</label>
+                        <textarea id="m4Step4Input" rows="2" placeholder="Ej: Porque 3 cuadernos de $15 dan $45 y al restar de $50 sobran $5 pesos." class="w-full px-3 py-2 rounded-xl border border-amber-300 focus:border-amber-500 focus:outline-none text-sm font-semibold"></textarea>
+                    </div>
+                </div>
+
+                <!-- Botones y Feedback -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="m4.toggleHint()" class="text-xs text-amber-700 font-bold bg-amber-100 border border-amber-300 px-3 py-2 rounded-xl">
+                        <i class="fa-solid fa-lightbulb mr-1"></i> Pedir Pista al Búho
+                    </button>
+                    <button onclick="m4.validateReasoning()" class="bg-rose-500 hover:bg-rose-600 text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg transition">
+                        ¡Evaluar Razonamiento! <i class="fa-solid fa-paper-plane ml-2"></i>
+                    </button>
+                </div>
+
+                <div id="m4HintBox" class="hidden p-4 bg-amber-50 rounded-xl border-2 border-amber-300 text-amber-900 text-xs font-semibold">
+                    <p id="m4HintText"></p>
+                </div>
+
+                <div id="m4Feedback" class="hidden p-4 rounded-2xl font-bold text-center text-sm leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- MODAL TUTOR PROFE BÚHO Y GLOSARIO PEDAGÓGICO -->
+        <div id="modalTutor" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 border-4 border-amber-400 max-h-[85vh] overflow-y-auto space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-4xl">🦉</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800 font-fredoka">Glosario y Tutoría del Profe Búho</h3>
+                            <p class="text-xs text-slate-500">Explicaciones sencillas para consultar en cualquier momento</p>
+                        </div>
+                    </div>
+                    <button onclick="app.closeTutorModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+
+                <div class="space-y-3 text-sm text-slate-700">
+                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                        <h5 class="font-extrabold text-amber-900 mb-1">🍕 Fracciones, Numerador y Denominador:</h5>
+                        <p class="text-xs leading-relaxed">El <b>Denominador</b> (número de abajo) te dice en cuántas partes iguales dividimos el entero (ej. 16 rebanadas). El <b>Numerador</b> (número de arriba) te dice cuántas de esas partes hemos tomado o pintado.</p>
+                    </div>
+
+                    <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+                        <h5 class="font-extrabold text-emerald-900 mb-1">🏛️ Valor Absoluto vs. Valor Posicional:</h5>
+                        <p class="text-xs leading-relaxed">El <b>Valor Absoluto</b> es la cifra tal cual (un 5 es un 5). El <b>Valor Posicional</b> depende de la columna: un 5 en las Decenas vale 50, y en las Unidades de Millar vale 5,000.</p>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                        <h5 class="font-extrabold text-blue-900 mb-1">➕ Sumas y Restas con Llevadas:</h5>
+                        <p class="text-xs leading-relaxed">Si la suma en una columna pasa de 9, dejas la unidad abajo y "llevas" la decena arriba a la siguiente columna. Usa la pizarra digital para marcarlas fácilmente.</p>
+                    </div>
+
+                    <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200">
+                        <h5 class="font-extrabold text-rose-900 mb-1">💡 Pasos para Resolver Razonamiento Lógico:</h5>
+                        <ol class="list-decimal list-inside text-xs space-y-1">
+                            <li>Anota los números importantes (Datos).</li>
+                            <li>Pregúntate: ¿Tengo que juntar (sumar), quitar (restar) o repartir (dividir)?</li>
+                            <li>Realiza la cuenta en la pizarra.</li>
+                            <li>Explica qué significa el resultado final.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <button onclick="app.closeTutorModal()" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold py-3 rounded-xl transition">
+                    ¡Entendido, Profe Búho!
+                </button>
+            </div>
+        </div>
+
+        <!-- 7. PANTALLA MEDALLAS Y SALÓN DE TROFEOS -->
+        <section id="screenTrophies" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-amber-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Salón de Recompensas y Medallas</h3>
+                    <span class="text-xs text-amber-600 font-semibold">¡Consigue trofeos resolviendo desafíos!</span>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <!-- Grid de Medallas -->
+            <div id="badgesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Se puebla dinámicamente -->
+            </div>
+        </section>
+
+        <!-- 8. PANTALLA ESTADÍSTICAS Y PROGRESO DETALLADO -->
+        <section id="screenStats" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow border-2 border-emerald-300">
+                <button onclick="app.showScreen('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition flex items-center text-sm">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+                </button>
+                <div class="text-center">
+                    <h3 class="font-bold text-lg text-slate-800 font-fredoka">Panel de Avance y Estadísticas</h3>
+                    <span class="text-xs text-emerald-600 font-semibold">Diagnóstico y rendimiento acumulado</span>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Diagnóstico General -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-slate-200 text-center space-y-4">
+                    <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-lg font-fredoka">Resumen de Carrera</h4>
+                    <div class="space-y-2 text-left text-sm border-t pt-3">
+                        <div class="flex justify-between text-slate-600">
+                            <span>Total de ejercicios:</span>
+                            <span id="statTotalPlayed" class="font-bold text-slate-800">0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Respuestas correctas:</span>
+                            <span id="statCorrect" class="font-bold text-emerald-600">0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Respuestas incorrectas:</span>
+                            <span id="statIncorrect" class="font-bold text-rose-500">0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Porcentaje de Aciertos:</span>
+                            <span id="statAccuracyPercent" class="font-bold text-blue-600">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Rendimiento por Módulo -->
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-slate-200 md:col-span-2 space-y-4">
+                    <h4 class="font-bold text-slate-800 text-lg font-fredoka flex items-center">
+                        <i class="fa-solid fa-chart-bar text-emerald-500 mr-2"></i> Rendimiento por Módulo
+                    </h4>
+                    
+                    <div class="space-y-4 pt-2">
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-emerald-700">Módulo 1: Operaciones Básicas</span>
+                                <span id="m1StatPercent">0%</span>
+                            </div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="m1Bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-blue-700">Módulo 2: Valor Posicional vs. Absoluto</span>
+                                <span id="m2StatPercent">0%</span>
+                            </div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="m2Bar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-purple-700">Módulo 3: Fracciones y Bloques</span>
+                                <span id="m3StatPercent">0%</span>
+                            </div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="m3Bar" class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-rose-700">Módulo 4: Razonamiento Lógico</span>
+                                <span id="m4StatPercent">0%</span>
+                            </div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="m4Bar" class="h-full bg-rose-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- NOTIFICACIÓN MEDALLA DESBLOQUEADA (POPUP ANIMADO) -->
+    <div id="toastMedal" class="fixed bottom-6 right-6 bg-amber-400 text-slate-900 border-4 border-white px-6 py-4 rounded-3xl shadow-2xl flex items-center space-x-4 transform translate-y-32 opacity-0 transition-all duration-500 z-50">
+        <div class="text-4xl" id="toastMedalIcon">🏆</div>
+        <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-amber-900">¡Nueva Medalla Conseguida!</div>
+            <div class="font-extrabold text-lg text-slate-900" id="toastMedalTitle">Título Medalla</div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE APLICACIÓN COMPLETA -->
+    <script>
+        /**
+         * 1. SINTETIZADOR DE SONIDO WEB AUDIO API (Totalmente Offline)
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3); // C6
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+
+            playIncorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.setValueAtTime(180, now + 0.15);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playFanfare() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, i) => {
+                    const now = this.ctx.currentTime + (i * 0.08);
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                });
+            }
+
+            toggleSound() {
+                this.muted = !this.muted;
+                const soundIcon = document.getElementById('soundIcon');
+                if (this.muted) {
+                    soundIcon.className = 'fa-solid fa-volume-xmark text-rose-500';
+                } else {
+                    soundIcon.className = 'fa-solid fa-volume-high text-slate-600';
+                    this.playCorrect();
+                }
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        /**
+         * 2. CATÁLOGO DE MEDALLAS / LOGROS
+         */
+        const MEDALS_DEFINITION = [
+            { id: 'first_step', title: 'Primeros Pasos', desc: 'Resuelve tu primer ejercicio en cualquier módulo', icon: '🐣', req: (u) => u.stats.totalPlayed >= 1 },
+            { id: 'streak_5', title: 'Racha Caliente', desc: 'Resuelve 5 ejercicios consecutivos correctamente', icon: '🔥', req: (u) => u.streak >= 5 },
+            { id: 'm1_master', title: 'Maestro del Cálculo', desc: 'Resuelve 10 ejercicios del Módulo 1', icon: '⚡', req: (u) => (u.stats.moduleStats[1]?.played || 0) >= 10 },
+            { id: 'm2_master', title: 'Genio Posicional', desc: 'Resuelve 10 ejercicios de Valor Posicional', icon: '🏛️', req: (u) => (u.stats.moduleStats[2]?.played || 0) >= 10 },
+            { id: 'm3_master', title: 'Corta Fracciones', desc: 'Resuelve 10 ejercicios de Fracciones', icon: '🍕', req: (u) => (u.stats.moduleStats[3]?.played || 0) >= 10 },
+            { id: 'm4_master', title: 'Detective Lógico', desc: 'Resuelve 10 problemas de razonamiento', icon: '🕵️‍♂️', req: (u) => (u.stats.moduleStats[4]?.played || 0) >= 10 },
+            { id: 'score_100', title: 'Coleccionista de Puntos', desc: 'Acumula 100 puntos en tu cuenta', icon: '⭐', req: (u) => u.points >= 100 },
+            { id: 'perfect_accuracy', title: 'Ojo de Águila', desc: 'Mantén un 90% o más de precisión con al menos 15 ejercicios', icon: '🎯', req: (u) => u.stats.totalPlayed >= 15 && (u.stats.correct / u.stats.totalPlayed) >= 0.9 }
+        ];
+
+        /**
+         * 3. SISTEMA DE USUARIOS Y GESTOR CENTRAL DE LA APLICACIÓN
+         */
+        class AppManager {
+            constructor() {
+                this.users = [];
+                this.currentUser = null;
+                this.selectedAvatar = '🦊';
+            }
+
+            init() {
+                this.loadUsersFromStorage();
+                if (this.users.length === 0) {
+                    const defaultUser = this.createNewUserObject('Estudiante', '3', '🦊');
+                    this.users.push(defaultUser);
+                    this.saveUsersToStorage();
+                }
+                this.renderProfilesList();
+                this.switchUser(this.users[0].id);
+            }
+
+            openTutorModal() {
+                const el = document.getElementById('modalTutor');
+                if (el) el.classList.remove('hidden');
+            }
+
+            closeTutorModal() {
+                const el = document.getElementById('modalTutor');
+                if (el) el.classList.add('hidden');
+            }
+
+            createNewUserObject(name, grade, avatar) {
+                return {
+                    id: 'usr_' + Date.now(),
+                    name: name,
+                    grade: parseInt(grade),
+                    avatar: avatar,
+                    points: 0,
+                    streak: 0,
+                    badges: [],
+                    stats: {
+                        totalPlayed: 0,
+                        correct: 0,
+                        incorrect: 0,
+                        moduleStats: {
+                            1: { played: 0, correct: 0 },
+                            2: { played: 0, correct: 0 },
+                            3: { played: 0, correct: 0 },
+                            4: { played: 0, correct: 0 }
+                        }
+                    }
+                };
+            }
+
+            loadUsersFromStorage() {
+                try {
+                    const saved = localStorage.getItem('mateaventuras_users');
+                    if (saved) this.users = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Error al cargar datos:', e);
+                }
+            }
+
+            saveUsersToStorage() {
+                try {
+                    localStorage.setItem('mateaventuras_users', JSON.stringify(this.users));
+                } catch(e) {
+                    console.error('Error al guardar datos:', e);
+                }
+            }
+
+            switchUser(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+                this.currentUser = user;
+                this.updateUIForUser();
+                this.showScreen('dashboard');
+            }
+
+            updateUIForUser() {
+                if (!this.currentUser) return;
+                
+                const setElText = (id, text) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = text;
+                };
+                const setElVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val;
+                };
+
+                const navUserArea = document.getElementById('navUserArea');
+                if (navUserArea) navUserArea.classList.remove('hidden');
+
+                setElText('navAvatar', this.currentUser.avatar);
+                setElText('navUserName', this.currentUser.name);
+                setElText('userPoints', this.currentUser.points);
+                setElVal('gradeSelector', this.currentUser.grade);
+
+                setElText('dashUserName', this.currentUser.name);
+                setElText('dashGradeText', `${this.currentUser.grade}º Primaria`);
+                setElText('dashMedalCount', `${this.currentUser.badges.length} / ${MEDALS_DEFINITION.length}`);
+                
+                const total = this.currentUser.stats.totalPlayed;
+                const correct = this.currentUser.stats.correct;
+                const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+                setElText('dashAccuracy', `${acc}%`);
+                setElText('dashTotalSolved', total);
+            }
+
+            changeGrade(newGrade) {
+                if (!this.currentUser) return;
+                this.currentUser.grade = parseInt(newGrade);
+                this.saveUsersToStorage();
+                this.updateUIForUser();
+            }
+
+            renderProfilesList() {
+                const container = document.getElementById('profilesList');
+                if (!container) return;
+                container.innerHTML = '';
+                this.users.forEach(u => {
+                    const card = document.createElement('div');
+                    card.className = 'flex items-center justify-between bg-slate-50 border-2 border-slate-200 hover:border-amber-400 p-3 rounded-2xl cursor-pointer transition';
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-3" onclick="app.switchUser('${u.id}')">
+                            <span class="text-3xl">${u.avatar}</span>
+                            <div class="text-left">
+                                <div class="font-bold text-slate-800">${u.name}</div>
+                                <div class="text-xs text-slate-500 font-semibold">${u.grade}º Primaria • ${u.points} pts</div>
+                            </div>
+                        </div>
+                        <button onclick="app.deleteUser('${u.id}', event)" class="text-slate-300 hover:text-rose-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            showCreateUserForm() {
+                const el = document.getElementById('modalCreateUser');
+                if (el) el.classList.remove('hidden');
+            }
+
+            closeCreateUserModal() {
+                const el = document.getElementById('modalCreateUser');
+                if (el) el.classList.add('hidden');
+            }
+
+            selectAvatar(emoji) {
+                this.selectedAvatar = emoji;
+                document.querySelectorAll('.avatar-opt').forEach(b => {
+                    if (b.textContent.trim() === emoji) {
+                        b.classList.add('border-amber-400', 'bg-amber-50');
+                        b.classList.remove('border-slate-200');
+                    } else {
+                        b.classList.remove('border-amber-400', 'bg-amber-50');
+                        b.classList.add('border-slate-200');
+                    }
+                });
+            }
+
+            saveNewUser() {
+                const nameInput = document.getElementById('newUserName').value.trim();
+                const gradeInput = document.getElementById('newUserGrade').value;
+                if (!nameInput) {
+                    alert('Por favor escribe tu nombre');
+                    return;
+                }
+                const newUser = this.createNewUserObject(nameInput, gradeInput, this.selectedAvatar);
+                this.users.push(newUser);
+                this.saveUsersToStorage();
+                this.renderProfilesList();
+                this.closeCreateUserModal();
+                this.switchUser(newUser.id);
+            }
+
+            deleteUser(userId, event) {
+                event.stopPropagation();
+                if (this.users.length <= 1) {
+                    alert('Debe existir al menos un perfil de usuario.');
+                    return;
+                }
+                if (confirm('¿Estás seguro de eliminar este perfil?')) {
+                    this.users = this.users.filter(u => u.id !== userId);
+                    this.saveUsersToStorage();
+                    this.renderProfilesList();
+                    if (this.currentUser.id === userId) {
+                        this.switchUser(this.users[0].id);
+                    }
+                }
+            }
+
+            openProfileModal() {
+                this.renderProfilesList();
+                this.showScreen('profiles');
+            }
+
+            showScreen(screenId) {
+                const screens = ['profiles', 'dashboard', 'module1', 'module2', 'module3', 'module4', 'trophies', 'stats'];
+                screens.forEach(s => {
+                    const el = document.getElementById('screen' + s.charAt(0).toUpperCase() + s.slice(1));
+                    if (el) el.classList.add('hidden');
+                });
+                
+                const target = document.getElementById('screen' + screenId.charAt(0).toUpperCase() + screenId.slice(1));
+                if (target) target.classList.remove('hidden');
+
+                if (screenId === 'trophies') this.renderTrophies();
+                if (screenId === 'stats') this.renderStats();
+            }
+
+            startModule(modNum) {
+                if (modNum === 1) { m1.init(); this.showScreen('module1'); }
+                if (modNum === 2) { m2.init(); this.showScreen('module2'); }
+                if (modNum === 3) { m3.init(); this.showScreen('module3'); }
+                if (modNum === 4) { m4.init(); this.showScreen('module4'); }
+            }
+
+            registerAnswer(moduleNum, isCorrect, pointsEarned = 10) {
+                if (!this.currentUser) return;
+
+                const u = this.currentUser;
+                u.stats.totalPlayed++;
+                
+                if (!u.stats.moduleStats[moduleNum]) {
+                    u.stats.moduleStats[moduleNum] = { played: 0, correct: 0 };
+                }
+                u.stats.moduleStats[moduleNum].played++;
+
+                if (isCorrect) {
+                    u.stats.correct++;
+                    u.stats.moduleStats[moduleNum].correct++;
+                    u.streak++;
+                    u.points += pointsEarned;
+                    audio.playCorrect();
+                } else {
+                    u.stats.incorrect++;
+                    u.streak = 0;
+                    audio.playIncorrect();
+                }
+
+                this.checkMedals();
+                this.saveUsersToStorage();
+                this.updateUIForUser();
+            }
+
+            checkMedals() {
+                const u = this.currentUser;
+                MEDALS_DEFINITION.forEach(m => {
+                    if (!u.badges.includes(m.id) && m.req(u)) {
+                        u.badges.push(m.id);
+                        this.showMedalToast(m);
+                        audio.playFanfare();
+                    }
+                });
+            }
+
+            showMedalToast(medal) {
+                const toast = document.getElementById('toastMedal');
+                if (!toast) return;
+                document.getElementById('toastMedalIcon').textContent = medal.icon;
+                document.getElementById('toastMedalTitle').textContent = medal.title;
+
+                toast.classList.remove('translate-y-32', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-32', 'opacity-0');
+                }, 4000);
+            }
+
+            renderTrophies() {
+                const grid = document.getElementById('badgesGrid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                const u = this.currentUser;
+
+                MEDALS_DEFINITION.forEach(m => {
+                    const unlocked = u.badges.includes(m.id);
+                    const card = document.createElement('div');
+                    card.className = `p-5 rounded-3xl border-4 text-center transition ${unlocked ? 'bg-white border-amber-400 shadow-lg' : 'bg-slate-100 border-slate-300 opacity-60'}`;
+                    card.innerHTML = `
+                        <div class="text-5xl mb-3 ${unlocked ? 'bouncy' : 'grayscale'}">${m.icon}</div>
+                        <h4 class="font-bold text-slate-800 font-fredoka">${m.title}</h4>
+                        <p class="text-xs text-slate-500 mt-1">${m.desc}</p>
+                        <div class="mt-3">
+                            <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full ${unlocked ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-500'}">
+                                ${unlocked ? 'Desbloqueado' : 'Bloqueado'}
+                            </span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            renderStats() {
+                const u = this.currentUser;
+                const setElText = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = val;
+                };
+
+                setElText('statTotalPlayed', u.stats.totalPlayed);
+                setElText('statCorrect', u.stats.correct);
+                setElText('statIncorrect', u.stats.incorrect);
+
+                const acc = u.stats.totalPlayed > 0 ? Math.round((u.stats.correct / u.stats.totalPlayed) * 100) : 0;
+                setElText('statAccuracyPercent', `${acc}%`);
+
+                [1, 2, 3, 4].forEach(mod => {
+                    const st = u.stats.moduleStats[mod] || { played: 0, correct: 0 };
+                    const percent = st.played > 0 ? Math.round((st.correct / st.played) * 100) : 0;
+                    setElText(`m${mod}StatPercent`, `${percent}% (${st.correct}/${st.played})`);
+                    const bar = document.getElementById(`m${mod}Bar`);
+                    if (bar) bar.style.width = `${percent}%`;
+                });
+            }
+        }
+
+        /**
+         * 4. LÓGICA MÓDULO 1: OPERACIONES CON CIFRAS PERSONALIZABLES Y PIZARRA
+         */
+        class Module1 {
+            constructor() {
+                this.currentOp = 'add';
+                this.num1 = 0;
+                this.num2 = 0;
+                this.correctAnswer = 0;
+                this.isDrawing = false;
+                this.canvas = null;
+                this.ctx = null;
+            }
+
+            init() {
+                const streakEl = document.getElementById('m1Streak');
+                if (streakEl) streakEl.textContent = `${app.currentUser.streak} 🔥`;
+                this.setupCanvas();
+                this.generateQuestion();
+            }
+
+            setupCanvas() {
+                setTimeout(() => {
+                    this.canvas = document.getElementById('scratchCanvas');
+                    if (!this.canvas) return;
+                    this.ctx = this.canvas.getContext('2d');
+                    this.ctx.strokeStyle = '#06D6A0';
+                    this.ctx.lineWidth = 3;
+
+                    const start = (e) => {
+                        this.isDrawing = true;
+                        this.ctx.beginPath();
+                        const rect = this.canvas.getBoundingClientRect();
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        this.ctx.moveTo(clientX - rect.left, clientY - rect.top);
+                    };
+
+                    const draw = (e) => {
+                        if (!this.isDrawing) return;
+                        const rect = this.canvas.getBoundingClientRect();
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        this.ctx.lineTo(clientX - rect.left, clientY - rect.top);
+                        this.ctx.stroke();
+                    };
+
+                    const stop = () => { this.isDrawing = false; };
+
+                    this.canvas.onmousedown = start;
+                    this.canvas.onmousemove = draw;
+                    this.canvas.onmouseup = stop;
+
+                    this.canvas.ontouchstart = start;
+                    this.canvas.ontouchmove = draw;
+                    this.canvas.ontouchend = stop;
+                }, 100);
+            }
+
+            clearCanvas() {
+                if (this.ctx && this.canvas) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+
+            toggleScratchpad() {
+                const box = document.getElementById('m1ScratchpadBox');
+                if (!box) return;
+                box.classList.toggle('hidden');
+                const btnText = document.getElementById('m1ScratchBtnText');
+                if (box.classList.contains('hidden')) {
+                    if (btnText) btnText.textContent = "Abrir Pizarra para hacer cuentas paso a paso";
+                } else {
+                    if (btnText) btnText.textContent = "Ocultar Pizarra";
+                    this.setupCanvas();
+                }
+            }
+
+            setOperation(op) {
+                this.currentOp = op;
+                document.querySelectorAll('.op-tab-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-emerald-500', 'text-white');
+                    b.classList.add('bg-white', 'text-slate-700');
+                });
+                const activeBtn = document.getElementById(`m1Btn${op.charAt(0).toUpperCase() + op.slice(1)}`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('bg-white', 'text-slate-700');
+                    activeBtn.classList.add('active', 'bg-emerald-500', 'text-white');
+                }
+                this.generateQuestion();
+            }
+
+            generateQuestion() {
+                const d1 = parseInt(document.getElementById('m1Digits1')?.value) || 3;
+                const d2 = parseInt(document.getElementById('m1Digits2')?.value) || 3;
+
+                const min1 = Math.pow(10, d1 - 1);
+                const max1 = Math.pow(10, d1) - 1;
+                const min2 = Math.pow(10, d2 - 1);
+                const max2 = Math.pow(10, d2) - 1;
+
+                this.num1 = Math.floor(Math.random() * (max1 - min1 + 1)) + min1;
+                this.num2 = Math.floor(Math.random() * (max2 - min2 + 1)) + min2;
+
+                const fb = document.getElementById('m1Feedback');
+                if (fb) fb.classList.add('hidden');
+
+                const qText = document.getElementById('m1QuestionText');
+
+                if (this.currentOp === 'add') {
+                    this.correctAnswer = this.num1 + this.num2;
+                    if (qText) qText.textContent = `${this.num1.toLocaleString()} + ${this.num2.toLocaleString()} = ?`;
+                } else if (this.currentOp === 'sub') {
+                    if (this.num1 < this.num2) {
+                        const temp = this.num1;
+                        this.num1 = this.num2;
+                        this.num2 = temp;
+                    }
+                    this.correctAnswer = this.num1 - this.num2;
+                    if (qText) qText.textContent = `${this.num1.toLocaleString()} - ${this.num2.toLocaleString()} = ?`;
+                } else if (this.currentOp === 'mul') {
+                    this.correctAnswer = this.num1 * this.num2;
+                    if (qText) qText.textContent = `${this.num1.toLocaleString()} × ${this.num2.toLocaleString()} = ?`;
+                } else if (this.currentOp === 'div') {
+                    this.correctAnswer = Math.floor(this.num1 / Math.max(1, this.num2));
+                    this.num1 = this.correctAnswer * this.num2;
+                    if (qText) qText.textContent = `${this.num1.toLocaleString()} ÷ ${this.num2.toLocaleString()} = ?`;
+                }
+
+                this.renderOptions();
+            }
+
+            renderOptions() {
+                const container = document.getElementById('m1OptionsContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const options = new Set();
+                options.add(this.correctAnswer);
+
+                while (options.size < 4) {
+                    const delta = Math.floor(Math.random() * 20) + 1;
+                    const wrongOpt = Math.max(0, this.correctAnswer + (Math.random() > 0.5 ? delta : -delta));
+                    if (wrongOpt !== this.correctAnswer) options.add(wrongOpt);
+                }
+
+                const shuffleOpts = Array.from(options).sort(() => Math.random() - 0.5);
+
+                shuffleOpts.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-extrabold text-xl sm:text-2xl rounded-2xl transition transform hover:scale-105';
+                    btn.textContent = opt.toLocaleString();
+                    btn.onclick = () => this.checkAnswer(opt);
+                    container.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selected) {
+                const isCorrect = selected === this.correctAnswer;
+                const fb = document.getElementById('m1Feedback');
+                if (fb) {
+                    fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+
+                    if (isCorrect) {
+                        fb.classList.add('bg-emerald-100', 'text-emerald-800');
+                        fb.innerHTML = '¡Excelente cálculo! 🎉 +10 Puntos';
+                    } else {
+                        fb.classList.add('bg-rose-100', 'text-rose-800');
+                        fb.innerHTML = `El resultado correcto es <b>${this.correctAnswer.toLocaleString()}</b>. ¡Sigue practicando!`;
+                    }
+                }
+
+                app.registerAnswer(1, isCorrect, 10);
+                const streakEl = document.getElementById('m1Streak');
+                if (streakEl) streakEl.textContent = `${app.currentUser.streak} 🔥`;
+
+                setTimeout(() => {
+                    this.generateQuestion();
+                }, 2000);
+            }
+
+            showTableExplorer() {
+                const explorer = document.getElementById('m1TableExplorer');
+                if (explorer) explorer.classList.remove('hidden');
+                const btnBox = document.getElementById('tableSelectorBtns');
+                if (!btnBox) return;
+                btnBox.innerHTML = '';
+                for (let i = 1; i <= 12; i++) {
+                    const b = document.createElement('button');
+                    b.className = 'px-3 py-1 bg-amber-100 hover:bg-amber-300 text-amber-800 font-bold rounded-lg text-xs whitespace-nowrap';
+                    b.textContent = `Tabla ${i}`;
+                    b.onclick = () => this.renderTableGrid(i);
+                    btnBox.appendChild(b);
+                }
+                this.renderTableGrid(2);
+            }
+
+            closeTableExplorer() {
+                const explorer = document.getElementById('m1TableExplorer');
+                if (explorer) explorer.classList.add('hidden');
+            }
+
+            renderTableGrid(tableNum) {
+                const grid = document.getElementById('tableGrid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                for (let i = 1; i <= 10; i++) {
+                    const card = document.createElement('div');
+                    card.className = 'bg-amber-50 border border-amber-300 p-3 rounded-xl text-center cursor-pointer hover:bg-amber-200 transition';
+                    card.innerHTML = `<span class="font-bold text-slate-700">${tableNum} × ${i} = </span><span class="font-extrabold text-amber-700 text-lg">${tableNum * i}</span>`;
+                    card.onclick = () => audio.playCorrect();
+                    grid.appendChild(card);
+                }
+            }
+        }
+
+        /**
+         * 5. LÓGICA MÓDULO 2: VALOR POSICIONAL VS ABSOLUTO
+         */
+        class Module2 {
+            constructor() {
+                this.currentNumber = 4582;
+                this.correctAnswer = 0;
+            }
+
+            init() {
+                this.generateNewExplorationNumber();
+                this.generateQuestion();
+            }
+
+            generateNewExplorationNumber() {
+                const grade = app.currentUser ? app.currentUser.grade : 3;
+                let min = 100, max = 999;
+                if (grade === 4) { min = 1000; max = 9999; }
+                else if (grade >= 5) { min = 10000; max = 99999; }
+
+                this.currentNumber = Math.floor(Math.random() * (max - min)) + min;
+                this.renderPositionalDisplay(this.currentNumber);
+            }
+
+            renderPositionalDisplay(num) {
+                const container = document.getElementById('m2PositionalDisplay');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const str = num.toString().padStart(5, '0');
+                const unitsDef = [
+                    { label: 'DM', name: 'Decenas de Millar', factor: 10000, color: 'bg-rose-100 text-rose-800 border-rose-300' },
+                    { label: 'UM', name: 'Unidades de Millar', factor: 1000, color: 'bg-orange-100 text-orange-800 border-orange-300' },
+                    { label: 'C', name: 'Centenas', factor: 100, color: 'bg-amber-100 text-amber-800 border-amber-300' },
+                    { label: 'D', name: 'Decenas', factor: 10, color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+                    { label: 'U', name: 'Unidades', factor: 1, color: 'bg-blue-100 text-blue-800 border-blue-300' }
+                ];
+
+                unitsDef.forEach((u, i) => {
+                    const digit = parseInt(str[i]);
+                    const positionalVal = digit * u.factor;
+                    const card = document.createElement('div');
+                    card.className = `p-3 rounded-2xl border-2 ${u.color} shadow-sm`;
+                    card.innerHTML = `
+                        <div class="text-xs font-black uppercase tracking-wider">${u.label}</div>
+                        <div class="text-3xl font-extrabold my-1">${digit}</div>
+                        <div class="text-[11px] font-semibold opacity-90">Posicional: <b>${positionalVal.toLocaleString()}</b></div>
+                        <div class="text-[11px] font-semibold opacity-75">Absoluto: <b>${digit}</b></div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            generateQuestion() {
+                const numStr = this.currentNumber.toString();
+                const randomIndex = Math.floor(Math.random() * numStr.length);
+                const digit = parseInt(numStr[randomIndex]);
+                const isPositional = Math.random() > 0.5;
+
+                const factors = [1, 10, 100, 1000, 10000];
+                const factor = factors[numStr.length - 1 - randomIndex];
+                const correctAnswer = isPositional ? digit * factor : digit;
+
+                this.correctAnswer = correctAnswer;
+                const questionEl = document.getElementById('m2QuestionText');
+                if (questionEl) {
+                    questionEl.innerHTML = `En el número <span class="text-indigo-600 font-extrabold text-2xl">${this.currentNumber.toLocaleString()}</span>... ¿Cuál es el <span class="bg-amber-200 px-2 py-0.5 rounded font-extrabold">${isPositional ? 'VALOR POSICIONAL' : 'VALOR ABSOLUTO'}</span> de la cifra <span class="text-red-500 font-extrabold text-2xl">${digit}</span>?`;
+                }
+
+                this.renderOptions(correctAnswer);
+            }
+
+            renderOptions(correct) {
+                const container = document.getElementById('m2OptionsContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const options = new Set();
+                options.add(correct);
+                while (options.size < 4) {
+                    const fake = Math.floor(Math.random() * 5000);
+                    if (fake !== correct) options.add(fake);
+                }
+
+                Array.from(options).sort(() => Math.random() - 0.5).forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-2 border-indigo-300 font-extrabold text-xl rounded-2xl transition';
+                    btn.textContent = opt.toLocaleString();
+                    btn.onclick = () => this.checkAnswer(opt);
+                    container.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selected) {
+                const isCorrect = selected === this.correctAnswer;
+                const fb = document.getElementById('m2Feedback');
+                if (fb) {
+                    fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+                    if (isCorrect) {
+                        fb.classList.add('bg-emerald-100', 'text-emerald-800');
+                        fb.innerHTML = '¡Respuesta Correcta! 🎉 +10 Puntos';
+                    } else {
+                        fb.classList.add('bg-rose-100', 'text-rose-800');
+                        fb.innerHTML = `Incorrecto. El valor exacto era <b>${this.correctAnswer.toLocaleString()}</b>.`;
+                    }
+                }
+                app.registerAnswer(2, isCorrect, 10);
+                setTimeout(() => {
+                    this.generateNewExplorationNumber();
+                    this.generateQuestion();
+                }, 2000);
+            }
+        }
+
+        /**
+         * AMPLIA LÓGICA MÓDULO 3 CON PIZZAS, DENOMINADORES GRANDES Y OPERACIONES
+         */
+        class Module3 {
+            constructor() {
+                this.targetNum = 5;
+                this.targetDen = 16;
+                this.trayBlocks = [];
+                this.submode = 'builder';
+                this.pizzaTotalSlices = 4;
+                this.pizzaEatenSlices = 0;
+            }
+
+            init() {
+                this.setSubmode('builder');
+            }
+
+            setSubmode(mode) {
+                this.submode = mode;
+                const builder = document.getElementById('m3PanelBuilder');
+                const pizza = document.getElementById('m3PanelPizza');
+                const ops = document.getElementById('m3PanelOps');
+
+                if (builder) builder.classList.add('hidden');
+                if (pizza) pizza.classList.add('hidden');
+                if (ops) ops.classList.add('hidden');
+
+                if (mode === 'builder' && builder) {
+                    builder.classList.remove('hidden');
+                    this.generateNewChallenge();
+                } else if (mode === 'pizza' && pizza) {
+                    pizza.classList.remove('hidden');
+                    this.initPizza(4);
+                } else if (mode === 'operations' && ops) {
+                    ops.classList.remove('hidden');
+                    this.generateFractionOp();
+                }
+            }
+
+            updateDenominators(newDen) {
+                this.targetDen = Math.max(2, Math.min(64, parseInt(newDen) || 16));
+                this.generateNewChallenge();
+            }
+
+            generateNewChallenge() {
+                this.targetNum = Math.floor(Math.random() * (this.targetDen - 1)) + 1;
+                this.trayBlocks = [];
+
+                const titleEl = document.getElementById('m3TargetFractionText');
+                if (titleEl) titleEl.textContent = `${this.targetNum} / ${this.targetDen}`;
+                const inputEl = document.getElementById('m3TextInput');
+                if (inputEl) inputEl.value = '';
+                const fb = document.getElementById('m3Feedback');
+                if (fb) fb.classList.add('hidden');
+
+                this.renderPalette();
+                this.renderTray();
+            }
+
+            renderPalette() {
+                const palette = document.getElementById('m3BlockPalette');
+                if (!palette) return;
+                palette.innerHTML = '';
+
+                const btnUnit = document.createElement('button');
+                btnUnit.className = `bg-purple-600 text-white font-extrabold px-4 py-2 rounded-xl text-sm shadow hover:scale-105 transition flex items-center space-x-1`;
+                btnUnit.innerHTML = `<i class="fa-solid fa-plus text-xs"></i> <span>1/${this.targetDen}</span>`;
+                btnUnit.onclick = () => this.addBlockToTray(this.targetDen, `1/${this.targetDen}`, 'bg-purple-600');
+                palette.appendChild(btnUnit);
+
+                const equivalents = [
+                    { den: 2, label: '1/2', color: 'bg-emerald-500' },
+                    { den: 4, label: '1/4', color: 'bg-blue-500' },
+                    { den: 8, label: '1/8', color: 'bg-amber-500' }
+                ];
+
+                equivalents.forEach(eq => {
+                    if (eq.den <= this.targetDen) {
+                        const btn = document.createElement('button');
+                        btn.className = `${eq.color} text-white font-extrabold px-3 py-2 rounded-xl text-xs shadow hover:scale-105 transition flex items-center space-x-1`;
+                        btn.innerHTML = `<i class="fa-solid fa-plus text-xs"></i> <span>${eq.label}</span>`;
+                        btn.onclick = () => this.addBlockToTray(eq.den, eq.label, eq.color);
+                        palette.appendChild(btn);
+                    }
+                });
+            }
+
+            addBlockToTray(den, label, colorClass) {
+                this.trayBlocks.push({ den, label, colorClass });
+                audio.playCorrect();
+                this.renderTray();
+            }
+
+            clearTray() {
+                this.trayBlocks = [];
+                this.renderTray();
+            }
+
+            renderTray() {
+                const container = document.getElementById('m3TrayContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                let sumAcc = 0;
+                this.trayBlocks.forEach((b, idx) => {
+                    sumAcc += 1 / b.den;
+                    const blockEl = document.createElement('div');
+                    blockEl.className = `${b.colorClass || 'bg-purple-600'} text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow flex items-center space-x-2`;
+                    blockEl.innerHTML = `<span>${b.label}</span> <i class="fa-solid fa-xmark cursor-pointer text-white/80 hover:text-white" onclick="m3.removeBlockFromTray(${idx})"></i>`;
+                    container.appendChild(blockEl);
+                });
+
+                const traySumText = document.getElementById('m3TraySumText');
+                if (traySumText) {
+                    traySumText.textContent = `${sumAcc.toFixed(3)} (${(sumAcc * this.targetDen).toFixed(1)} / ${this.targetDen})`;
+                }
+                const trayBlocksCount = document.getElementById('m3TrayBlocksCount');
+                if (trayBlocksCount) {
+                    trayBlocksCount.textContent = `${this.trayBlocks.length} bloques`;
+                }
+            }
+
+            removeBlockFromTray(index) {
+                this.trayBlocks.splice(index, 1);
+                this.renderTray();
+            }
+
+            verifyFractionChallenge() {
+                const textInput = document.getElementById('m3TextInput')?.value.trim().toLowerCase() || '';
+                let traySum = 0;
+                this.trayBlocks.forEach(b => traySum += 1 / b.den);
+                const targetVal = this.targetNum / this.targetDen;
+
+                const fb = document.getElementById('m3Feedback');
+                if (!fb) return;
+                fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800', 'bg-amber-100', 'text-amber-800');
+
+                const isValueClose = Math.abs(traySum - targetVal) < 0.001;
+
+                if (!isValueClose) {
+                    fb.classList.add('bg-rose-100', 'text-rose-800');
+                    fb.innerHTML = `La cantidad en la bandeja sumó ${(traySum * this.targetDen).toFixed(1)}/${this.targetDen}, pero debías armar <b>${this.targetNum}/${this.targetDen}</b>. ¡Ajusta los bloques!`;
+                    app.registerAnswer(3, false, 0);
+                    return;
+                }
+
+                if (!textInput) {
+                    fb.classList.add('bg-amber-100', 'text-amber-800');
+                    fb.innerHTML = `¡Bien armado en la bandeja! Ahora escribe con letra cómo se lee la fracción (ej. "cinco dieciseisavos").`;
+                    return;
+                }
+
+                fb.classList.add('bg-emerald-100', 'text-emerald-800');
+                fb.innerHTML = `¡Excelente! Armaste correctamente ${this.targetNum}/${this.targetDen} y lo escribiste: "${textInput}". 🎉 +15 Puntos`;
+                app.registerAnswer(3, true, 15);
+                setTimeout(() => this.generateNewChallenge(), 2500);
+            }
+
+            initPizza(slices) {
+                this.pizzaTotalSlices = parseInt(slices);
+                this.pizzaEatenSlices = 0;
+                this.renderPizzaSvg();
+            }
+
+            toggleSlice(index) {
+                this.pizzaEatenSlices = (this.pizzaEatenSlices + 1) % (this.pizzaTotalSlices + 1);
+                audio.playCorrect();
+                this.renderPizzaSvg();
+            }
+
+            renderPizzaSvg() {
+                const container = document.getElementById('pizzaSvgContainer');
+                if (!container) return;
+                const slices = this.pizzaTotalSlices;
+                const remaining = slices - this.pizzaEatenSlices;
+
+                let svg = `<svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">`;
+                svg += `<circle cx="100" cy="100" r="95" fill="#fef3c7" stroke="#d97706" stroke-width="6"/>`;
+
+                const angleStep = (2 * Math.PI) / slices;
+                for (let i = 0; i < slices; i++) {
+                    const startAngle = i * angleStep;
+                    const endAngle = (i + 1) * angleStep;
+                    const isEaten = i >= remaining;
+
+                    const x1 = 100 + 90 * Math.cos(startAngle);
+                    const y1 = 100 + 90 * Math.sin(startAngle);
+                    const x2 = 100 + 90 * Math.cos(endAngle);
+                    const y2 = 100 + 90 * Math.sin(endAngle);
+
+                    const pathData = `M 100 100 L ${x1} ${y1} A 90 90 0 0 1 ${x2} ${y2} Z`;
+                    const fillColor = isEaten ? '#e2e8f0' : '#f59e0b';
+                    const strokeColor = '#b45309';
+
+                    svg += `<path d="${pathData}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2" onclick="m3.toggleSlice(${i})"/>`;
+                }
+                svg += `</svg>`;
+
+                container.innerHTML = svg;
+
+                const fracText = document.getElementById('pizzaFractionText');
+                if (fracText) fracText.textContent = `${remaining} / ${slices}`;
+                const wordsText = document.getElementById('pizzaWordsText');
+                if (wordsText) wordsText.textContent = `${remaining} de ${slices} rebanadas (${(remaining/slices === 1) ? '¡Entero completo!' : 'Porción de pizza'})`;
+            }
+
+            generateFractionOp() {
+                const num1 = Math.floor(Math.random() * 3) + 1;
+                const num2 = Math.floor(Math.random() * 3) + 1;
+                const den = 4;
+                const correct = num1 + num2;
+
+                const qEl = document.getElementById('m3OpQuestion');
+                if (qEl) {
+                    qEl.innerHTML = `<span>${num1}/${den}</span> <span>+</span> <span>${num2}/${den}</span> <span>=</span> <span class="text-indigo-600">?</span>`;
+                }
+
+                const container = document.getElementById('m3OpOptions');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const opts = [
+                    { text: `${correct}/${den}`, isCorrect: true },
+                    { text: `${correct}/${den * 2}`, isCorrect: false },
+                    { text: `${num1 * num2}/${den}`, isCorrect: false },
+                    { text: `${correct + 1}/${den}`, isCorrect: false }
+                ].sort(() => Math.random() - 0.5);
+
+                opts.forEach(o => {
+                    const btn = document.createElement('button');
+                    btn.className = 'py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-extrabold text-xl rounded-xl transition';
+                    btn.textContent = o.text;
+                    btn.onclick = () => {
+                        const fb = document.getElementById('m3OpFeedback');
+                        if (fb) {
+                            fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+                            if (o.isCorrect) {
+                                fb.classList.add('bg-emerald-100', 'text-emerald-800');
+                                fb.innerHTML = '¡Correcto! En sumas con mismo denominador, se suman los numeradores. 🎉';
+                                app.registerAnswer(3, true, 10);
+                                setTimeout(() => this.generateFractionOp(), 2000);
+                            } else {
+                                fb.classList.add('bg-rose-100', 'text-rose-800');
+                                fb.innerHTML = 'Recuerda: El denominador de abajo se mantiene igual, solo sumamos los números de arriba.';
+                                app.registerAnswer(3, false, 0);
+                            }
+                        }
+                    };
+                    container.appendChild(btn);
+                });
+            }
+        }
+
+        /**
+         * AMPLÍA MÓDULO 4 CON PIZARRA Y FICHAS INTERACTIVAS
+         */
+        class Module4 {
+            constructor() {
+                this.currentProblem = null;
+                this.canvas = null;
+                this.ctx = null;
+                this.isDrawing = false;
+            }
+
+            init() {
+                this.generateProblem();
+                this.setupCanvas();
+            }
+
+            setupCanvas() {
+                setTimeout(() => {
+                    this.canvas = document.getElementById('m4ScratchCanvas');
+                    if (!this.canvas) return;
+                    this.ctx = this.canvas.getContext('2d');
+                    this.ctx.strokeStyle = '#38bdf8';
+                    this.ctx.lineWidth = 3;
+
+                    const start = (e) => {
+                        this.isDrawing = true;
+                        this.ctx.beginPath();
+                        const rect = this.canvas.getBoundingClientRect();
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        this.ctx.moveTo(clientX - rect.left, clientY - rect.top);
+                    };
+
+                    const draw = (e) => {
+                        if (!this.isDrawing) return;
+                        const rect = this.canvas.getBoundingClientRect();
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        this.ctx.lineTo(clientX - rect.left, clientY - rect.top);
+                        this.ctx.stroke();
+                    };
+
+                    const stop = () => { this.isDrawing = false; };
+
+                    this.canvas.onmousedown = start;
+                    this.canvas.onmousemove = draw;
+                    this.canvas.onmouseup = stop;
+                    this.canvas.ontouchstart = start;
+                    this.canvas.ontouchmove = draw;
+                    this.canvas.ontouchend = stop;
+                }, 100);
+            }
+
+            clearCanvas() {
+                if (this.ctx && this.canvas) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+
+            generateProblem() {
+                const grade = app.currentUser ? app.currentUser.grade : 3;
+                const label = document.getElementById('m4GradeLabel');
+                if (label) label.textContent = `${grade}º Primaria`;
+
+                const fb = document.getElementById('m4Feedback');
+                if (fb) fb.classList.add('hidden');
+                const hint = document.getElementById('m4HintBox');
+                if (hint) hint.classList.add('hidden');
+
+                const step2 = document.getElementById('m4Step2Input');
+                if (step2) step2.value = '';
+                const step3 = document.getElementById('m4Step3Input');
+                if (step3) step3.value = '';
+                const step4 = document.getElementById('m4Step4Input');
+                if (step4) step4.value = '';
+
+                const bank = {
+                    3: [
+                        {
+                            statement: "Camila fue a la papelería y compró 3 cuadernos de $15 pesos cada uno. Si pagó con un billete de $50 pesos, ¿cuánto dinero le dieron de cambio?",
+                            numericAnswer: 5,
+                            tags: ["3 cuadernos", "$15 cada uno", "Billete de $50", "$100 pesos", "5 cuadernos"],
+                            hint: "1. Multiplica 3×15 = 45. <br>2. Resta de $50: 50-45 = $5 de cambio."
+                        }
+                    ],
+                    4: [
+                        {
+                            statement: "Don Mateo tiene 120 manzanas y quiere guardarlas en bolsas de 8 manzanas cada una. ¿Cuántas bolsas llenas puede armar?",
+                            numericAnswer: 15,
+                            tags: ["120 manzanas", "8 por bolsa", "10 bolsas", "150 manzanas"],
+                            hint: "Divide 120 entre 8 (120 ÷ 8 = 15)."
+                        }
+                    ],
+                    5: [
+                        {
+                            statement: "Un camión lleva 4,500 naranjas. En la primera parada entregó 1,250 y en la segunda 1,800. ¿Cuántas naranjas quedan en el camión?",
+                            numericAnswer: 1450,
+                            tags: ["4,500 naranjas", "1,250 entregadas", "1,800 entregadas", "500 sobrantes"],
+                            hint: "1,250 + 1,800 = 3,050. Luego resta 4,500 - 3,050 = 1,450."
+                        }
+                    ],
+                    6: [
+                        {
+                            statement: "Un depósito de agua tiene capacidad de 1,200 litros. Si está al 75% de su capacidad, ¿cuántos litros de agua contiene?",
+                            numericAnswer: 900,
+                            tags: ["1,200 litros", "75% capacidad", "50% mitad", "300 litros"],
+                            hint: "Calcula 75% de 1,200 (1,200 ÷ 4 × 3 = 900 litros)."
+                        }
+                    ]
+                };
+
+                const list = bank[grade] || bank[3];
+                this.currentProblem = list[Math.floor(Math.random() * list.length)];
+                
+                const stmt = document.getElementById('m4ProblemStatement');
+                if (stmt) stmt.textContent = this.currentProblem.statement;
+                const hText = document.getElementById('m4HintText');
+                if (hText) hText.innerHTML = this.currentProblem.hint;
+
+                const tagsBox = document.getElementById('m4InteractiveTags');
+                if (!tagsBox) return;
+                tagsBox.innerHTML = '';
+                this.currentProblem.tags.forEach(t => {
+                    const tag = document.createElement('button');
+                    tag.className = 'px-3 py-1.5 bg-white border-2 border-slate-300 hover:border-rose-400 font-bold text-xs rounded-xl transition text-slate-700';
+                    tag.textContent = t;
+                    tag.onclick = () => {
+                        tag.classList.toggle('bg-rose-500');
+                        tag.classList.toggle('text-white');
+                        tag.classList.toggle('border-rose-600');
+                        audio.playCorrect();
+                    };
+                    tagsBox.appendChild(tag);
+                });
+            }
+
+            toggleHint() {
+                const hint = document.getElementById('m4HintBox');
+                if (hint) hint.classList.toggle('hidden');
+            }
+
+            validateReasoning() {
+                const step3Str = document.getElementById('m4Step3Input')?.value.trim().replace(/[^0-9]/g, '') || '';
+                const step4 = document.getElementById('m4Step4Input')?.value.trim() || '';
+
+                const fb = document.getElementById('m4Feedback');
+                if (!fb) return;
+                fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-rose-100', 'text-rose-900', 'bg-amber-100', 'text-amber-900');
+
+                if (!step3Str || !step4) {
+                    fb.classList.add('bg-amber-100', 'text-amber-900');
+                    fb.innerHTML = '⚠️ Escribe el resultado numérico y la explicación breve para validar tu proceso.';
+                    return;
+                }
+
+                const userVal = parseInt(step3Str);
+                const isNumberCorrect = userVal === this.currentProblem.numericAnswer;
+
+                if (isNumberCorrect && step4.length >= 8) {
+                    fb.classList.add('bg-emerald-100', 'text-emerald-900');
+                    fb.innerHTML = `🌟 ¡Excelente proceso! Seleccionaste los datos, hiciste tus cuentas y explicaste por qué dio ${userVal}. 🎉 +20 Puntos`;
+                    app.registerAnswer(4, true, 20);
+                    setTimeout(() => this.generateProblem(), 3000);
+                } else if (!isNumberCorrect) {
+                    fb.classList.add('bg-rose-100', 'text-rose-900');
+                    fb.innerHTML = `El cálculo no parece correcto. Revisa las operaciones en la pizarra digital.`;
+                    app.registerAnswer(4, false, 0);
+                } else {
+                    fb.classList.add('bg-amber-100', 'text-amber-900');
+                    fb.innerHTML = `El número está bien, pero por favor escribe una explicación un poco más completa.`;
+                }
+            }
+        }
+
+        // Global Initialization
+        const app = new AppManager();
+        const m1 = new Module1();
+        const m2 = new Module2();
+        const m3 = new Module3();
+        const m4 = new Module4();
+
+        window.onload = function() {
+            app.init();
+        };
+    </script>
+</body>
+</html>
